@@ -17,6 +17,7 @@ export default function AssistantResponse({ state, onRetry, onAsk }: AssistantRe
   const [sourcesOpen, setSourcesOpen] = useState(false)
   const hasSources = state.sources.length > 0
   const hasFollowups = state.status === 'completed' && state.recommendations.length > 0
+  const hasFooter = hasSources || Boolean(state.content)
 
   return (
     <article className={styles.response}>
@@ -52,18 +53,25 @@ export default function AssistantResponse({ state, onRetry, onAsk }: AssistantRe
         </section>
       ) : null}
 
-      {hasSources ? (
-        <button
-          className={styles.sourcesButton}
-          type="button"
-          onClick={() => setSourcesOpen(true)}
-        >
-          查看 {state.sources.length} 个来源
-        </button>
-      ) : null}
-
-      {state.content ? (
-        <ResponseActions content={state.content} onRetry={onRetry} />
+      {hasFooter ? (
+        <footer className={styles.footer} aria-label="回答操作">
+          <div className={styles.footerLeft}>
+            {hasSources ? (
+              <button
+                className={styles.sourcesButton}
+                type="button"
+                onClick={() => setSourcesOpen(true)}
+              >
+                查看 {state.sources.length} 个来源
+              </button>
+            ) : null}
+          </div>
+          <div className={styles.footerRight}>
+            {state.content ? (
+              <ResponseActions content={state.content} onRetry={onRetry} />
+            ) : null}
+          </div>
+        </footer>
       ) : null}
 
       {hasSources ? (

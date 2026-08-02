@@ -42,6 +42,34 @@
   background: #f4f4f2;
 }
 
+.markdown :global(div[data-ds-codeblock='true']) {
+  position: relative;
+}
+
+.markdown :global(div[data-ds-codeblock='true'] > button[data-ds-copy-code='true']) {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  border: 1px solid var(--ds-border);
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(6px);
+  border-radius: 10px;
+  padding: 6px 10px;
+  cursor: pointer;
+  color: var(--ds-text-secondary);
+  font-size: 12px;
+  transition:
+    background var(--ds-motion-fast) ease,
+    color var(--ds-motion-fast) ease,
+    border-color var(--ds-motion-fast) ease;
+}
+
+.markdown :global(div[data-ds-codeblock='true'] > button[data-ds-copy-code='true']:hover) {
+  background: var(--ds-bg-hover);
+  color: var(--ds-text);
+  border-color: #d3d3cf;
+}
+
 .error {
   margin: 10px 0 0;
   color: #b42318;
@@ -52,14 +80,36 @@
   font-size: 13px;
 }
 
-.sourcesButton {
+.footer {
   margin-top: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.footerLeft,
+.footerRight {
+  display: flex;
+  align-items: center;
+}
+
+.footerLeft {
+  min-width: 0;
+}
+
+.footerRight {
+  margin-left: auto;
+}
+
+.sourcesButton {
   border: 1px solid var(--ds-border);
   background: transparent;
   border-radius: 10px;
   padding: 8px 10px;
   cursor: pointer;
   color: var(--ds-text-secondary);
+  font-size: 13px;
   transition:
     background var(--ds-motion-fast) ease,
     color var(--ds-motion-fast) ease,
