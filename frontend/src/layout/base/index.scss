@@ -1,0 +1,19 @@
+.base-layout {
+  height: 100%;
+  > main { height: calc(100% - 64px); padding-left: 224px; }
+}
+.base-layout__header { position: sticky; top: 0; z-index: 1000; }
+.base-layout__sidebar {
+  position: fixed; z-index: 1000; left: 0; top: 64px; bottom: 0;
+  width: 224px; display: flex;
+  .base-layout__sidebar-main { flex-grow: 1; overflow: auto; display: flex; }
+  .base-layout__sidebar-main-content { width: 100%; max-height: 100%; }
+}
+.base-layout__content { height: 100%; background: #fff; }
+@media (max-width: 760px) {
+  .base-layout > main { padding-left: 64px; }
+  .base-layout__sidebar { width: 64px; }
+  .base-layout-nav { padding: 14px 8px; }
+  .base-layout-nav__item { justify-content: center; padding: 0 !important; }
+  .base-layout-nav__label { display: none; }
+}

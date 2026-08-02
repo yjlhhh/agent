@@ -1,0 +1,22 @@
+.com-sender {
+  .com-sender__main {
+    background: #fff; border-radius: 18px; border: 1px solid #d9d9d9;
+    box-shadow: 0 8px 28px rgba(0,0,0,.07), 0 1px 2px rgba(0,0,0,.04);
+    transition: border-color .2s, box-shadow .2s;
+    &:focus-within { border-color: #aaa; box-shadow: 0 10px 34px rgba(0,0,0,.1); }
+    .ant-input { background: transparent; border: none; padding: 18px 20px 12px; box-shadow: none; }
+    .ant-input::placeholder { color: #999; }
+  }
+  .com-sender__actions {
+    display: flex; justify-content: space-between; padding: 8px 10px 10px;
+    .ant-btn { --ant-button-padding-inline: 9px; border-radius: 9px; }
+    .ant-btn.btn-send.ant-btn-variant-filled { border-color: transparent; background: #171717; color: #fff; }
+    .btn-send svg { width: 22px; height: 22px; transform: translate(-1px, 2px); }
+  }
+  .com-sender__files { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 10px; }
+  .com-sender__file { display: flex; align-items: center; gap: 10px; padding: 10px; background: #fafafa; border: 1px solid #e5e5e5; border-radius: 10px; max-width: 50%; }
+  .com-sender__file-image { width: 100px; height: 100px; border-radius: 6px; object-fit: cover; }
+  .com-sender__file-icon { flex-shrink: 0; }
+  .com-sender__file-name { color: #777; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+}
+@media (max-width: 640px) { .com-sender__actions-left .ant-btn span:not(.ant-btn-icon) { display: none; } }

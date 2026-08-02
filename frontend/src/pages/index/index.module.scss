@@ -1,0 +1,22 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  gap: 20px;
+  padding: 64px 40px 80px;
+  max-width: 960px;
+  margin: 0 auto;
+  box-sizing: border-box;
+
+  > div {
+    width: 100%;
+  }
+  .sender {
+    max-width: 760px;
+  }
+}
+@media (max-width: 700px) {
+  .container { align-items: stretch; padding: 40px 18px; }
+}

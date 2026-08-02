@@ -1,0 +1,57 @@
+.repository-page {
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  min-height: 100%;
+  padding: 52px 48px;
+  box-sizing: border-box;
+  max-width: 1400px;
+
+  .repository-page__header {
+    padding-bottom: 32px;
+
+    .eyebrow { color: #999; font-size: 11px; font-weight: 650; letter-spacing: .14em; margin-bottom: 12px; }
+
+    .title {
+      font-size: 34px;
+      font-weight: 560;
+      letter-spacing: -.035em;
+      color: #171717;
+    }
+
+    .desc {
+      margin-top: 8px;
+      font-size: 14px;
+      color: #777;
+    }
+  }
+
+  .repository-page__body {
+    background: #fff;
+    padding: 18px;
+    border: 1px solid #e8e8e8;
+    border-radius: 16px;
+
+    .header {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+  }
+
+  .repository-page__file-name {
+    color: #242424;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+
+    .icon {
+      width: 20px;
+      height: 20px;
+      margin-right: 6px;
+      vertical-align: -0.25em;
+    }
+  }
+}

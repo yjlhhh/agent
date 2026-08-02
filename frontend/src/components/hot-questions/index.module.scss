@@ -1,0 +1,43 @@
+.hotQuestions {
+  width: 100%;
+  display: flex;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  max-width: 760px;
+  margin: 2px 0 0;
+}
+
+.hotQuestion {
+  display: flex;
+  position: relative;
+  flex-direction: column;
+  align-items: flex-start;
+  min-height: 88px;
+  background: #fafafa;
+  padding: 15px 42px 15px 16px;
+  border-radius: 14px;
+  border: 1px solid #ededed;
+  cursor: pointer;
+  transition: all .18s ease;
+
+  &:hover {
+    background: #f4f4f4;
+    border-color: #d7d7d7;
+    transform: translateY(-1px);
+  }
+}
+
+.eyebrow {
+  color: #999;
+  font-size: 11px;
+  margin-bottom: 6px;
+}
+
+.title {
+  font-size: 14px;
+  color: #303030;
+  line-height: 1.5;
+}
+.arrow { position: absolute; right: 16px; top: 16px; color: #aaa; }
+@media (max-width: 700px) { .hotQuestions { grid-template-columns: 1fr; } }

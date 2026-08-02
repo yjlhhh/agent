@@ -1,0 +1,36 @@
+.banner {
+  max-width: 760px;
+  padding: 0 4px 14px;
+  box-sizing: border-box;
+}
+.eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-bottom: 22px;
+  color: #777;
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: .14em;
+  span { width: 7px; height: 7px; border-radius: 50%; background: #10a37f; }
+}
+.title {
+  font-size: clamp(36px, 5vw, 58px);
+  line-height: 1.08;
+  font-weight: 560;
+  letter-spacing: -0.045em;
+  margin: 0;
+  color: #171717;
+}
+.subtitle {
+  max-width: 600px;
+  font-size: 16px;
+  line-height: 1.75;
+  color: #737373;
+  margin: 18px 0 0;
+}
+
+@media (max-width: 768px) {
+  .title { font-size: 38px; }
+  .subtitle { font-size: 15px; }
+}
