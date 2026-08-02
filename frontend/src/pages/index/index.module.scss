@@ -31,13 +31,43 @@
   gap: 6px;
   width: calc(100% - 34px);
   margin: 20px auto 0;
+}
 
-  span {
-    padding: 8px 6px;
-    border-radius: 9px;
-    color: #8a8a86;
-    font-size: 13px;
-  }
+.quickAction {
+  text-align: left;
+  padding: 10px 10px;
+  border-radius: 12px;
+  border: 1px solid transparent;
+  background: #fafaf9;
+  cursor: pointer;
+  transition:
+    border-color 160ms ease,
+    background 160ms ease,
+    transform 160ms ease;
+}
+
+.quickAction:hover {
+  border-color: var(--ds-border);
+  background: var(--ds-bg-hover);
+}
+
+.quickAction:active {
+  transform: translateY(1px);
+}
+
+.quickActionTitle {
+  display: block;
+  color: var(--ds-text);
+  font-size: 13px;
+  font-weight: 560;
+  margin-bottom: 2px;
+}
+
+.quickActionDesc {
+  display: block;
+  color: #8a8a86;
+  font-size: 12px;
+  line-height: 1.35;
 }
 
 .footerTip {

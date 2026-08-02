@@ -1,27 +1,51 @@
-import { KeyboardEvent, useState } from 'react'
+import { KeyboardEvent, forwardRef, useMemo, useState } from 'react'
 import { sessionState } from '@/store/session'
 import { useSnapshot } from 'valtio'
 import styles from './PromptComposer.module.scss'
 
 type PromptComposerProps = {
+  value?: string
+  defaultValue?: string
+  onValueChange?: (value: string) => void
+  autoFocus?: boolean
   loading?: boolean
   onSend?: (value: string, files: string[]) => void | Promise<void>
   onStop?: () => void
 }
 
-export default function PromptComposer(props: PromptComposerProps) {
-  const { loading = false, onSend, onStop } = props
-  const [value, setValue] = useState('')
+const PromptComposer = forwardRef<HTMLTextAreaElement, PromptComposerProps>(
+  function PromptComposer(props, ref) {
+    const {
+      value,
+      defaultValue = '',
+      onValueChange,
+      autoFocus = true,
+      loading = false,
+      onSend,
+      onStop,
+    } = props
+
+    const [uncontrolled, setUncontrolled] = useState(defaultValue)
+    const currentValue = value ?? uncontrolled
+    const setCurrentValue = useMemo(() => {
+      return (next: string) => {
+        onValueChange?.(next)
+        if (value === undefined) {
+          setUncontrolled(next)
+        }
+      }
+    }, [onValueChange, value])
+
   const [focused, setFocused] = useState(false)
   const session = useSnapshot(sessionState)
 
   async function submit() {
-    const message = value.trim()
+    const message = currentValue.trim()
     if (!message || loading) return
 
     try {
       await onSend?.(message, [])
-      setValue('')
+      setCurrentValue('')
     } catch {
       // Keep the composed value so the user can retry after a failed send.
     }
@@ -52,14 +76,15 @@ export default function PromptComposer(props: PromptComposerProps) {
       <textarea
         aria-label="消息"
         className={styles.input}
-        value={value}
+        value={currentValue}
         placeholder="向 DeepSearch 提问"
-        autoFocus
+        autoFocus={autoFocus}
         rows={1}
-        onChange={(event) => setValue(event.target.value)}
+        onChange={(event) => setCurrentValue(event.target.value)}
         onKeyDown={handleKeyDown}
         onFocus={() => setFocused(true)}
         onBlur={() => setFocused(false)}
+        ref={ref}
       />
 
       <div className={styles.toolbar}>
@@ -108,4 +133,9 @@ export default function PromptComposer(props: PromptComposerProps) {
       </div>
     </div>
   )
-}
+  },
+)
+
+PromptComposer.displayName = 'PromptComposer'
+
+export default PromptComposer
