@@ -1,4 +1,4 @@
-import { BaseLayout } from '@/layout/base'
+import AppShell from '@/components/app-shell/AppShell'
 import NotFound from '@/pages/404'
 import Chat from '@/pages/chat'
 import Index from '@/pages/index'
@@ -42,9 +42,9 @@ export const routes: IRouteObject[] = [
 function Layout() {
   const location = useLocation()
   return (
-    <BaseLayout>
+    <AppShell>
       <Outlet key={location.pathname} />
-    </BaseLayout>
+    </AppShell>
   )
 }
 

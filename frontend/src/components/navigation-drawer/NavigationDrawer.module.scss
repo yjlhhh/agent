@@ -1,0 +1,26 @@
+.nav {
+  display: grid;
+  gap: 4px;
+}
+
+.nav a {
+  color: var(--ds-text);
+  padding: 9px 10px;
+  border-radius: 8px;
+  text-decoration: none;
+}
+
+.nav a:hover {
+  background: var(--ds-bg-hover);
+}
+
+.label {
+  margin: 20px 10px 6px;
+  color: var(--ds-text-secondary);
+  font-size: 12px;
+}
+
+.empty {
+  padding: 8px 10px;
+  color: var(--ds-text-secondary);
+}
