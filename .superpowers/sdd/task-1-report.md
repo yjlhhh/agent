@@ -75,7 +75,7 @@ Notes:
 
 ## Commit
 
-- Commit hash: `PENDING`
+- Primary implementation commit hash: `14ad1de0921fe296282fdd12399e72e9fade27d9`
 
 ## Self Review
 
