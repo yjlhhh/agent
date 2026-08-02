@@ -1,0 +1,31 @@
+.viewport {
+  height: 100%;
+  overflow-y: auto;
+  position: relative;
+}
+
+.content {
+  width: min(var(--ds-content-width), calc(100% - 48px));
+  margin: 0 auto;
+  padding: 32px 0 150px;
+}
+
+.question {
+  width: fit-content;
+  max-width: 72%;
+  margin: 0 0 28px auto;
+  padding: 10px 14px;
+  border-radius: 18px 18px 5px 18px;
+  background: #f3f3f1;
+}
+
+.jump {
+  position: sticky;
+  left: 50%;
+  bottom: 100px;
+  width: 34px;
+  height: 34px;
+  border: 1px solid var(--ds-border);
+  border-radius: 50%;
+  background: #fff;
+}
