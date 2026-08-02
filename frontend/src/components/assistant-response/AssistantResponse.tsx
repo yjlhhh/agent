@@ -58,11 +58,11 @@ export default function AssistantResponse({ state, onRetry, onAsk }: AssistantRe
           <div className={styles.footerLeft}>
             {hasSources ? (
               <button
-                className={styles.sourcesButton}
+                className={styles.sourcesMeta}
                 type="button"
                 onClick={() => setSourcesOpen(true)}
               >
-                查看 {state.sources.length} 个来源
+                来源 {state.sources.length}
               </button>
             ) : null}
           </div>

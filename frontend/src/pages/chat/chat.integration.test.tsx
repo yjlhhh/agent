@@ -119,6 +119,6 @@ it('loads session history when transport has no message', async () => {
   expect(screen.getByText('历史回答')).toBeInTheDocument()
   expect(screen.queryByText(/已完成研究/)).not.toBeInTheDocument()
   expect(
-    screen.getByRole('button', { name: '查看 1 个来源' }),
+    screen.getByRole('button', { name: '来源 1' }),
   ).toBeInTheDocument()
 })
