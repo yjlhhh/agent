@@ -9,10 +9,12 @@ function App() {
       theme={{
         cssVar: true,
         token: {
-          colorPrimary: '#171717',
-          colorText: '#171717',
-          colorBorder: '#e5e5e5',
-          borderRadius: 10,
+          colorPrimary: '#111111',
+          colorText: '#202020',
+          colorTextSecondary: '#73736f',
+          colorBorder: '#e2e2df',
+          colorBgLayout: '#ffffff',
+          borderRadius: 8,
           fontSize: 14,
         },
       }}

@@ -1,0 +1,41 @@
+:root {
+  --ds-bg: #ffffff;
+  --ds-bg-subtle: #f7f7f5;
+  --ds-bg-hover: #f1f1ef;
+  --ds-text: #202020;
+  --ds-text-secondary: #73736f;
+  --ds-border: #e2e2df;
+  --ds-action: #111111;
+  --ds-content-width: 760px;
+  --ds-radius-control: 8px;
+  --ds-radius-content: 16px;
+  --ds-radius-composer: 24px;
+  --ds-shadow-composer: 0 9px 28px rgb(0 0 0 / 8%);
+  --ds-motion-fast: 150ms;
+  --ds-motion-normal: 220ms;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--ds-bg);
+  color: var(--ds-text);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition: none !important;
+  }
+}
