@@ -21,7 +21,8 @@
     "noUncheckedSideEffectImports": true,
     "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"]
+      "@/*": ["src/*"],
+      "marked": ["src/types/marked.d.ts"]
     },
     "plugins": [
       {
