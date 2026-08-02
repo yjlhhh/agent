@@ -24,4 +24,16 @@ it('adds a copy button for code blocks', async () => {
 
   await fireEvent.click(button)
   expect(navigator.clipboard.writeText).toHaveBeenCalledWith(expect.stringContaining('console.log(1)'))
+  expect(container.querySelector('[data-ds-code-language="true"]')).toHaveTextContent('js')
+})
+
+it('wraps markdown tables for responsive scrolling', () => {
+  const { container } = render(
+    <MarkdownContent value={'| 项目 | 内容 |\n| --- | --- |\n| 名称 | DeepSearch |'} />,
+  )
+
+  const wrapper = container.querySelector('[data-ds-table="true"]')
+  expect(wrapper).toBeInTheDocument()
+  expect(wrapper?.querySelector('table')).toBeInTheDocument()
+  expect(screen.getByRole('columnheader', { name: '项目' })).toBeInTheDocument()
 })

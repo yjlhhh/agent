@@ -95,7 +95,7 @@ async def get_messages_by_session_id(
 
         # 查询 messages 表中对应 session_id 的消息
         messages_data = db.execute(
-            text("SELECT message_id, session_id, user_question, model_answer, documents, recommended_questions, think, created_at FROM messages WHERE session_id = :session_id"),
+            text("SELECT message_id, session_id, user_question, model_answer, documents, recommended_questions, think, created_at FROM messages WHERE session_id = :session_id ORDER BY created_at ASC"),
             {"session_id": session_id}
         ).fetchall()
 
@@ -137,7 +137,7 @@ async def get_sessions_by_user_id(
 
         # 查询 sessions 表中对应 user_id 的所有会话
         sessions_data = db.execute(
-            text("SELECT * FROM sessions WHERE user_id = :user_id"),
+            text("SELECT * FROM sessions WHERE user_id = :user_id ORDER BY updated_at DESC"),
             {"user_id": user_id}
         ).fetchall()
 

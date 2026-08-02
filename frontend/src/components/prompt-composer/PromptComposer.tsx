@@ -1,5 +1,5 @@
 import { KeyboardEvent, forwardRef, useMemo, useState } from 'react'
-import { sessionState } from '@/store/session'
+import { sessionActions, sessionState } from '@/store/session'
 import { useSnapshot } from 'valtio'
 import styles from './PromptComposer.module.scss'
 
@@ -36,8 +36,8 @@ const PromptComposer = forwardRef<HTMLTextAreaElement, PromptComposerProps>(
       }
     }, [onValueChange, value])
 
-  const [focused, setFocused] = useState(false)
-  const session = useSnapshot(sessionState)
+    const [focused, setFocused] = useState(false)
+    const session = useSnapshot(sessionState)
 
   async function submit() {
     const message = currentValue.trim()
@@ -98,16 +98,22 @@ const PromptComposer = forwardRef<HTMLTextAreaElement, PromptComposerProps>(
           +
         </button>
 
-        <span
+        <button
+          type="button"
           className={`${styles.mode} ${session.useDeep ? styles.modeActive : ''}`}
+          aria-pressed={session.useDeep}
+          onClick={() => sessionActions.setUseDeep(!session.useDeep)}
         >
           深度研究
-        </span>
-        <span
+        </button>
+        <button
+          type="button"
           className={`${styles.mode} ${session.useWeb ? styles.modeActive : ''}`}
+          aria-pressed={session.useWeb}
+          onClick={() => sessionActions.setUseWeb(!session.useWeb)}
         >
           联网
-        </span>
+        </button>
 
         <span className={styles.spacer} />
 

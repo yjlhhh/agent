@@ -3,7 +3,13 @@ import AssistantResponse from '@/components/assistant-response/AssistantResponse
 import type { StreamState } from '@/lib/stream/types'
 import styles from './MessageList.module.scss'
 
+export type MessageTurn = {
+  question: string
+  state: StreamState
+}
+
 type MessageListProps = {
+  turns?: MessageTurn[]
   question: string
   state: StreamState
   onRetry?: () => void
@@ -30,7 +36,26 @@ export default function MessageList(props: MessageListProps) {
     if (!away) {
       scrollToBottom()
     }
-  }, [props.state.content, away])
+  }, [props.state.content, props.turns?.length, away])
+
+  function renderTurn(
+    turn: MessageTurn,
+    key: string,
+    actions?: { onRetry?: () => void; onAsk?: (question: string) => void },
+  ) {
+    return (
+      <section className={styles.turn} key={key}>
+        {turn.question.trim() ? (
+          <div className={styles.question}>{turn.question}</div>
+        ) : null}
+        <AssistantResponse
+          state={turn.state}
+          onRetry={actions?.onRetry}
+          onAsk={actions?.onAsk}
+        />
+      </section>
+    )
+  }
 
   return (
     <div
@@ -43,14 +68,14 @@ export default function MessageList(props: MessageListProps) {
       }}
     >
       <div className={styles.content}>
-        {props.question.trim() ? (
-          <div className={styles.question}>{props.question}</div>
-        ) : null}
-        <AssistantResponse
-          state={props.state}
-          onRetry={props.onRetry}
-          onAsk={props.onAsk}
-        />
+        {(props.turns ?? []).map((turn, index) =>
+          renderTurn(turn, `history-${index}-${turn.question}`),
+        )}
+        {renderTurn(
+          { question: props.question, state: props.state },
+          'current',
+          { onRetry: props.onRetry, onAsk: props.onAsk },
+        )}
       </div>
       {away ? (
         <button

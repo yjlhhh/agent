@@ -16,4 +16,25 @@ describe('createSseParser', () => {
     parser.push('data: {bad}\n\n')
     expect(onEvent).toHaveBeenCalledWith({ type: 'protocol-error', message: '无法解析流数据' })
   })
+
+  it('maps agent tool messages to public activity instead of answer content', () => {
+    const onEvent = vi.fn()
+    const parser = createSseParser(onEvent)
+
+    parser.push(
+      'data: {"role":"agent","content":"正在执行网络搜索: \\"最新 AI 新闻\\""}\n\n',
+    )
+
+    expect(onEvent).toHaveBeenCalledWith({
+      type: 'activity',
+      activity: {
+        kind: 'search',
+        title: '搜索网络信息',
+        detail: '最新 AI 新闻',
+      },
+    })
+    expect(onEvent).not.toHaveBeenCalledWith(
+      expect.objectContaining({ type: 'content' }),
+    )
+  })
 })

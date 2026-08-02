@@ -1,4 +1,5 @@
 import { screen, waitFor } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { beforeEach, expect, it, vi } from 'vitest'
 import { useChatStream } from '@/hooks/useChatStream'
 import { historyToStreamState } from '@/lib/stream/history'
@@ -98,6 +99,15 @@ it('loads session history when transport has no message', async () => {
     data: [
       {
         created_at: '',
+        message_id: 'msg-0',
+        session_id: 'abc',
+        user_question: '更早的问题',
+        model_answer: '更早的回答',
+        documents: '[]',
+        recommended_questions: [],
+      },
+      {
+        created_at: '',
         message_id: 'msg-1',
         session_id: 'abc',
         user_question: '历史问题',
@@ -117,8 +127,51 @@ it('loads session history when transport has no message', async () => {
 
   expect(await screen.findByText('历史问题')).toBeInTheDocument()
   expect(screen.getByText('历史回答')).toBeInTheDocument()
+  expect(screen.getByText('更早的问题')).toBeInTheDocument()
+  expect(screen.getByText('更早的回答')).toBeInTheDocument()
   expect(screen.queryByText(/已完成研究/)).not.toBeInTheDocument()
   expect(
     screen.getByRole('button', { name: '来源 1' }),
   ).toBeInTheDocument()
+})
+
+it('keeps the previous turn visible after a second question is sent', async () => {
+  const send = vi.fn().mockResolvedValue(undefined)
+  vi.mocked(useChatStream).mockReturnValue({
+    state: initialStreamState,
+    send,
+    stop: vi.fn(),
+    reset: vi.fn(),
+  })
+  detail.mockResolvedValue({
+    data: [
+      {
+        created_at: '',
+        message_id: 'msg-1',
+        session_id: 'abc',
+        user_question: '第一次提问',
+        model_answer: '第一次回答',
+        documents: '[]',
+        recommended_questions: [],
+      },
+    ],
+  })
+
+  renderWithApp(<Chat />, ['/chat/abc'])
+
+  expect(await screen.findByText('第一次回答')).toBeInTheDocument()
+
+  await userEvent.type(screen.getByRole('textbox'), '第二次提问{enter}')
+
+  await waitFor(() => {
+    expect(send).toHaveBeenCalledWith(
+      expect.objectContaining({
+        id: 'abc',
+        message: '第二次提问',
+      }),
+    )
+  })
+  expect(screen.getByText('第一次提问')).toBeInTheDocument()
+  expect(screen.getByText('第一次回答')).toBeInTheDocument()
+  expect(screen.getByText('第二次提问')).toBeInTheDocument()
 })

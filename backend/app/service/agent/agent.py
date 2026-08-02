@@ -1,4 +1,3 @@
-from service.core.retrieval import retrieve_content
 import json
 import re
 from utils.llm import get_llm_client, get_chat_model, get_reasoner_model
@@ -38,6 +37,7 @@ def middle_json_model(prompt):
 def rag(query):
     indexNames = "1"
     try:
+        from service.core.retrieval import retrieve_content
         from service.core.rag.utils.es_conn import ESConnection
         es = ESConnection()
         if not es.es.indices.exists(index=indexNames):
@@ -67,127 +67,79 @@ def web_search_answer(query):
         print(f"网络搜索失败: {e}")
         return f"网络搜索暂时不可用，错误信息: {str(e)}"
 
+
+ALLOWED_ACTIONS = {"本地文档搜索", "网络搜索"}
+
+
+def normalize_planned_actions(value, allow_web=True):
+    """Normalize planner output and enforce the tools allowed by the request."""
+    if isinstance(value, dict):
+        value = value.get("actions", [])
+    if not isinstance(value, list):
+        return []
+
+    normalized = []
+    for item in value:
+        if not isinstance(item, dict):
+            continue
+        action_name = item.get("action_name")
+        if action_name not in ALLOWED_ACTIONS:
+            continue
+        if action_name == "网络搜索" and not allow_web:
+            continue
+
+        prompts = item.get("prompts", [])
+        if isinstance(prompts, str):
+            prompts = [prompts]
+        if not isinstance(prompts, list):
+            continue
+
+        prompts = [prompt.strip() for prompt in prompts if isinstance(prompt, str) and prompt.strip()]
+        if prompts:
+            normalized.append({"action_name": action_name, "prompts": prompts[:3]})
+
+    return normalized
+
+
 #规划模块plan
-def agent_plan(query):
-    prompt='''
-    # 汽车销售助手Agent的Plan模块
+def agent_plan(query, allow_web=True):
+    prompt = f'''
+你是 DeepSearch 的通用研究规划器。分析用户问题，并判断是否真的需要外部检索。
 
-你是一个专业的汽车销售助手的规划模块。你的任务是：
-1. 分析用户的查询:{0}
-2. 基于已有的信息，决定使用哪个工具来查询以获得更多需要的信息（本地文档搜索或网络搜索）
-3. 将用户的原始查询拆解或延伸为1-2个相关问题，以获取更全面的信息
+用户问题：{query}
+联网是否允许：{"是" if allow_web else "否"}
 
+可用工具：
+1. 本地文档搜索：仅搜索用户已上传或组织内部的知识库。
+2. 网络搜索：搜索需要时效性的公开网络信息；只有联网允许时才可使用。
 
-## 可用工具
-1. **本地文档搜索**：搜索本地星辰电动ES9的文档，包含以下章节：
-   - 产品概述
-   - 设计理念
-   - 技术规格
-   - 驱动系统
-   - 电池与充电
-   - 智能座舱
-   - 智能驾驶
-   - 安全系统
-   - 车身结构
-   - 舒适性与便利性
-   - 版本与配置
-   - 价格与购买信息
-   - 售后服务
-   - 环保贡献
-   - 用户评价
-   - 竞品对比
-   - 常见问题
-   - 联系方式
+选择规则：
+- 编程实现、算法、数学推导、文本改写、翻译、常识问答、闲聊等可凭模型知识可靠回答的问题，必须直接回答，actions 返回空数组。
+- 用户明确提到“文档、知识库、上传资料、内部资料、根据材料”等内容时，才使用本地文档搜索。
+- 用户询问新闻、当前价格、近期版本、实时数据，或明确要求联网查证时，才使用网络搜索。
+- 不得把用户问题改写成无关产品、品牌或行业问题。
+- 每种工具最多生成 3 个简洁且与原问题直接相关的查询。
 
-2. **网络搜索**：在互联网上搜索相关信息
+示例：
+- “帮我实现一个快速排序” => {{"actions": []}}
+- “根据我上传的产品文档总结续航参数” => {{"actions": [{{"action_name": "本地文档搜索", "prompts": ["产品文档中的续航参数"]}}]}}
+- “搜索今天的 AI 新闻” => {{"actions": [{{"action_name": "网络搜索", "prompts": ["今天的 AI 新闻"]}}]}}
 
-## 工具选择规则
-- 当查询明确涉及星辰电动ES9的具体信息、参数、功能或服务时，优先使用**本地文档搜索**
-- 当查询涉及以下情况时，使用**网络搜索**：
-  - 与其他品牌车型的详细对比
-  - 最新市场动态或新闻
-  - 非官方的用户体验或评测
-  - 星辰电动ES9文档中可能没有的信息
-  - 需要实时数据（如当前市场价格波动等）
-
-## prompt延伸的规则
-- 本地检索的查询扩展侧重于产品信息的深度查询
-- 网络检索的查询扩展侧重于本地无法检索到的信息
-
-## 输出格式
-你的输出应该是一个JSON格式的列表，每个项目包含：
-1. `action_name`：工具名称（"本地文档搜索"或"网络搜索"）
-2. `prompts`：问题列表，第一个是原始查询，后面是拆解或延伸的问题
-[
-  {{
-    "action_name": "工具名称",
-    "prompts": [
-      "原始查询",
-      "拆解/延伸问题1",
-      "拆解/延伸问题2",
-      "拆解/延伸问题3"
-    ]
-  }}
-]
-
-
-## 示例
-
-### 示例1：关于车辆规格的查询
-用户：星辰电动ES9的续航里程是多少？
-
-输出：
-[
-  {{
-    "action_name": "本地文档搜索",
-    "prompts": [
-      "星辰电动ES9的续航里程是多少？",
-      "星辰电动ES9的电池容量是多少？",
-      "星辰电动ES9不同版本的续航里程有何区别？"
-    ]
-  }}
-]
-
-
-### 示例2：关于市场比较的查询
-用户：星辰电动ES9和特斯拉Model Y相比怎么样？
-
-输出：
-[
-  {{
-    "action_name": "本地文档搜索",
-    "prompts": [
-      "星辰电动ES9的主要优势和特点是什么？",
-      "星辰电动ES9的技术规格和配置有哪些？"
-    ]
-  }},
-  {{
-    "action_name": "网络搜索",
-    "prompts": [
-      "特斯拉Model Y主要优势和特点？",
-      "特斯拉Model Y最新规格和价格",
-      "特斯拉Model Y技术规格和配置有哪些"
-    ]
-  }}
-]
-
-
-### 示例3：关于日常问题
-用户：你好
-这种情况下都不需要调用，则输出为None
-
-只需要输出JSON的部分，前后不要输出任何信息
-
-'''.format(query)
-    result=(middle_json_model(prompt))
+只返回 JSON 对象：
+{{"actions": [{{"action_name": "本地文档搜索或网络搜索", "prompts": ["查询"]}}]}}
+'''
+    result = middle_json_model(prompt)
     print(result)
-    json_list=extract_json_content(result)
     try:
-        structure_output=json.loads(json_list)
-    except:
-        structure_output = None
+        parsed = json.loads(result)
+    except (TypeError, json.JSONDecodeError):
+        json_list = extract_json_content(result or "")
+        try:
+            parsed = json.loads(json_list) if json_list else {"actions": []}
+        except json.JSONDecodeError:
+            parsed = {"actions": []}
 
-    return structure_output
+    return normalize_planned_actions(parsed, allow_web=allow_web)
         
     
 
@@ -219,80 +171,30 @@ def adjust_format(original_data):
     return adjusted_data
 
 
-def reflection(user_query,memory_global):
-    prompt='''
-    你是一个专业的汽车销售助手的规划模块。你的任务是：
-1. 分析用户的查询:{0}
-2. 基于已有的信息，是否还需要延伸再进行查询
+def reflection(user_query, memory_global, allow_web=True):
+    prompt = f'''
+你是 DeepSearch 的通用研究审查器。判断现有检索资料是否足以回答原问题。
 
-##目前已有的信息:
-{1}
+原问题：{user_query}
+现有资料：{memory_global}
+联网是否允许：{"是" if allow_web else "否"}
 
+规则：
+- 资料已经覆盖问题时，不再搜索。
+- 补充查询必须与原问题直接相关，不得引入无关品牌、产品或行业。
+- 只有用户问题明确依赖其文档时才使用本地文档搜索。
+- 只有需要最新公开信息且联网允许时才使用网络搜索。
+- 最多补充 2 个查询。
 
-## 可用工具
-1. **本地文档搜索**：搜索本地星辰电动ES9的文档，包含以下章节：
-   - 产品概述
-   - 设计理念
-   - 技术规格
-   - 驱动系统
-   - 电池与充电
-   - 智能座舱
-   - 智能驾驶
-   - 安全系统
-   - 车身结构
-   - 舒适性与便利性
-   - 版本与配置
-   - 价格与购买信息
-   - 售后服务
-   - 环保贡献
-   - 用户评价
-   - 竞品对比
-   - 常见问题
-   - 联系方式
-
-2. **网络搜索**：在互联网上搜索相关信息
-
-## 工具选择规则
-- 当查询明确涉及星辰电动ES9的具体信息、参数、功能或服务时，优先使用**本地文档搜索**
-- 当查询涉及以下情况时，使用**网络搜索**：
-  - 与其他品牌车型的详细对比
-  - 最新市场动态或新闻
-  - 非官方的用户体验或评测
-  - 星辰电动ES9文档中可能没有的信息
-  - 需要实时数据（如当前市场价格波动等）
-
-## prompt延伸的规则
-- 本地检索的查询扩展侧重于产品信息的深度查询
-- 网络检索的查询扩展侧重于本地无法检索到的信息
-
-###重要！
-至多再扩展不超过3个查询，如果需要扩展则按照下面的输出格式输出，如果不需要则返回None
-
-
-
-
-## 输出格式
-你的输出应该是一个JSON格式的列表，每个项目包含：
-1. `action_name`：工具名称（"本地文档搜索"或"网络搜索"）
-2. `prompts`：一个扩展的问题，如果是网络检索，prompt不包含电动ES9，如果是本地检索，prompt只包含询问电动ES9，检索内容一定是一个简单问题，不包含对比
-[
-  {{
-    "action_name": "工具名称",
-    "prompts":'查询内容'
-  }}
-  ...
-]
-
-    '''.format(user_query,memory_global)
-    result=(middle_json_model(prompt))
-    # print(result)
-    json_list=extract_json_content(result)
+只返回 JSON 对象；不需要补充时返回 {{"actions": []}}：
+{{"actions": [{{"action_name": "本地文档搜索或网络搜索", "prompts": ["补充查询"]}}]}}
+'''
+    result = middle_json_model(prompt)
     try:
-        structure_output=json.loads(json_list)
-    except:
-        structure_output = None
-
-    return structure_output
+        parsed = json.loads(result)
+    except (TypeError, json.JSONDecodeError):
+        parsed = {"actions": []}
+    return normalize_planned_actions(parsed, allow_web=allow_web)
         
     
 
@@ -417,15 +319,60 @@ def process_actions(actions):
     return deduplicated_memory
 
 
-# 初始化 LLM 客户端
-def final_answer(user_query):
-    client = get_llm_client()
-    
-    reasoning_content = ""  # 定义完整思考过程
-    answer_content = ""     # 定义完整回复
-    is_answering = False   # 判断是否结束思考过程并开始回复
+def has_usable_memory(memory):
+    if not memory:
+        return False
+    for item in memory:
+        result = item.get("结果") if isinstance(item, dict) else None
+        if isinstance(result, list) and result:
+            return True
+        if isinstance(result, str) and result.strip() and "暂时不可用" not in result:
+            return True
+    return False
 
-    action_tool=agent_plan(user_query)
+
+def build_final_prompt(user_query, memory_global, conversation_history=None):
+    references = json.dumps(memory_global, ensure_ascii=False) if memory_global else "无"
+    history = (
+        json.dumps(conversation_history, ensure_ascii=False)
+        if conversation_history
+        else "无"
+    )
+    return f'''
+你是 DeepSearch，一个通用、准确且中立的 AI 助手。
+
+回答规则：
+1. 直接回答用户实际提出的问题，不得引入无关品牌、产品、行业或营销内容。
+2. 对话历史是当前会话的真实上下文。遇到“上一个问题”“刚才的回答”“继续解释”等指代时，必须依据对话历史回答。
+3. 参考资料仅作为相关证据；忽略与问题无关的资料。没有资料时，使用可靠的通用知识回答。
+4. 不得声称无法访问已提供的对话历史，也不得编造来源。
+5. 使用与用户相同的语言，结构清晰、简洁但完整。
+6. 如果用户要求代码，先给出完整可执行的 Markdown 代码块，再解释实现、复杂度和关键边界情况。
+7. 如果资料之间存在冲突或信息不足，要明确说明不确定性。
+
+当前会话历史（按时间顺序）：
+{history}
+
+参考资料：
+{references}
+
+用户问题：
+{user_query}
+'''
+
+
+# 初始化 LLM 客户端
+def final_answer(
+    user_query,
+    allow_web=True,
+    session_id=None,
+    user_id="1",
+    conversation_history=None,
+):
+    client = get_llm_client()
+    answer_content = ""
+
+    action_tool = agent_plan(user_query, allow_web=allow_web)
     print("action_tool")
     print(action_tool)
 
@@ -446,14 +393,15 @@ def final_answer(user_query):
         json_message = json.dumps(message)
         yield f"event: message\ndata: {json_message}\n\n"
 
-    memory_new=process_actions(actions)
+    memory_new = process_actions(actions)
+    memory_global = list(memory_new)
 
-    memory_global=[]
-    # memory_global.extend(memory_new[1:])
-    memory_global.extend(list(memory_new)[1:])
-
-    # 反思模块
-    action_reflect = reflection(user_query, memory_global)
+    # 仅在已经检索到有效资料时审查是否需要补充，直接回答不触发二次检索。
+    action_reflect = (
+        reflection(user_query, memory_global, allow_web=allow_web)
+        if actions and has_usable_memory(memory_global)
+        else []
+    )
     if action_reflect:
         print("回顾内容，进行反思...")
         message = {
@@ -476,18 +424,12 @@ def final_answer(user_query):
                 memory_global.extend(memory_new)
         except Exception as e:
             print(f"反思补充检索失败: {e}")
-        
-    final_prompt=f'''
-        你是一个星辰电动ES9的智能销售助手，负责根据用户的问题和提供的参考内容生成回答。请严格按照以下要求生成回答：
-        基于提供的参考内容进行回答，如果原文没有参考内容,根据你自己的知识进行回答
-        你需要用有打动力的销售的语言进行输出，突出星辰电动的优势
-        
-        参考内容：
-        {memory_global}
-        
-        用户问题：{user_query}
-    
-    '''
+
+    final_prompt = build_final_prompt(
+        user_query,
+        memory_global,
+        conversation_history=conversation_history,
+    )
 
     print(final_prompt)    
     print('-'*130)
@@ -505,6 +447,21 @@ def final_answer(user_query):
     
     for chunk in completion:
         if chunk.choices[0].finish_reason == "stop":
+            if session_id:
+                try:
+                    from service.core.chat import write_chat_to_db, update_session_name
+
+                    write_chat_to_db(
+                        session_id,
+                        user_query,
+                        answer_content,
+                        [],
+                        [],
+                        "",
+                    )
+                    update_session_name(session_id, user_query, user_id)
+                except Exception as error:
+                    print(f"保存深度研究会话失败: {error}")
 
             # 结束时发送 [DONE] 事件
             yield "event: end\ndata: [DONE]\n\n"
@@ -513,6 +470,7 @@ def final_answer(user_query):
             # 实时输出消息
             delta = chunk.choices[0].delta
             if delta.content:
+                answer_content += delta.content
                 message = {
                     "role": "assistant",
                     "content": delta.content,

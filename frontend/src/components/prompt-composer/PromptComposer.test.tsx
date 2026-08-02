@@ -1,9 +1,15 @@
 import { fireEvent, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { expect, it, vi } from 'vitest'
+import { beforeEach, expect, it, vi } from 'vitest'
+import { sessionActions } from '@/store/session'
 import { renderWithApp } from '@/test/test-utils'
 import styles from './PromptComposer.module.scss'
 import PromptComposer from './PromptComposer'
+
+beforeEach(() => {
+  sessionActions.setUseDeep(true)
+  sessionActions.setUseWeb(true)
+})
 
 it('submits trimmed text with Enter', async () => {
   const onSend = vi.fn()
@@ -28,8 +34,33 @@ it('shows stop while loading', async () => {
 it('shows both modes as active by default', () => {
   renderWithApp(<PromptComposer />)
 
-  expect(screen.getByText('深度研究')).toHaveClass(styles.modeActive)
-  expect(screen.getByText('联网')).toHaveClass(styles.modeActive)
+  expect(screen.getByRole('button', { name: '深度研究' })).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  )
+  expect(screen.getByRole('button', { name: '联网' })).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  )
+})
+
+it('allows deep research and web search to be toggled independently', async () => {
+  renderWithApp(<PromptComposer />)
+
+  const deep = screen.getByRole('button', { name: '深度研究' })
+  const web = screen.getByRole('button', { name: '联网' })
+
+  await userEvent.click(deep)
+
+  expect(deep).toHaveAttribute('aria-pressed', 'false')
+  expect(deep).not.toHaveClass(styles.modeActive)
+  expect(web).toHaveAttribute('aria-pressed', 'true')
+  expect(web).toHaveClass(styles.modeActive)
+
+  await userEvent.click(web)
+
+  expect(deep).toHaveAttribute('aria-pressed', 'false')
+  expect(web).toHaveAttribute('aria-pressed', 'false')
 })
 
 it('does not submit Enter while IME composition is active', () => {

@@ -21,7 +21,7 @@ export default function AssistantResponse({ state, onRetry, onAsk }: AssistantRe
 
   return (
     <article className={styles.response}>
-      <ResearchActivity status={state.status} milestones={state.milestones} />
+      <ResearchActivity status={state.status} activities={state.activities} />
       <MediaGallery images={state.images} />
       {state.content ? (
         <div className={styles.markdown}>

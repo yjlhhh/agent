@@ -27,11 +27,29 @@ export default function MarkdownContent({ value }: MarkdownContentProps) {
       pre.parentNode?.insertBefore(wrapper, pre)
       wrapper.appendChild(pre)
 
+      const language = [...code.classList]
+        .find((className) => className.startsWith('language-'))
+        ?.replace('language-', '')
+
+      if (language) {
+        const label = document.createElement('span')
+        label.textContent = language
+        label.setAttribute('data-ds-code-language', 'true')
+        wrapper.insertBefore(label, pre)
+      }
+
       const button = document.createElement('button')
       button.type = 'button'
       button.textContent = '复制代码'
       button.setAttribute('data-ds-copy-code', 'true')
       wrapper.insertBefore(button, pre)
+    })
+
+    document.querySelectorAll('table').forEach((table) => {
+      const wrapper = document.createElement('div')
+      wrapper.setAttribute('data-ds-table', 'true')
+      table.parentNode?.insertBefore(wrapper, table)
+      wrapper.appendChild(table)
     })
 
     return document.body.innerHTML

@@ -1,8 +1,11 @@
 import * as api from '@/api'
-import MessageList from '@/components/message-list/MessageList'
+import MessageList, {
+  type MessageTurn,
+} from '@/components/message-list/MessageList'
 import PromptComposer from '@/components/prompt-composer/PromptComposer'
 import { useChatStream } from '@/hooks/useChatStream'
 import { historyToStreamState } from '@/lib/stream/history'
+import { initialStreamState } from '@/lib/stream/stream-reducer'
 import type { StreamState } from '@/lib/stream/types'
 import { sessionState } from '@/store/session'
 import { usePageTransport } from '@/utils/usePageTransport'
@@ -17,16 +20,51 @@ export default function Chat() {
   const session = useSnapshot(sessionState)
   const { state, send: sendStream, stop } = useChatStream()
   const transport = usePageTransport(transportToChatEnter)
+  const [turns, setTurns] = useState<MessageTurn[]>([])
   const [question, setQuestion] = useState('')
   const [historyState, setHistoryState] = useState<StreamState | null>(null)
-  const cacheRef = useRef(new Map<string, { question: string; historyState: StreamState | null }>())
-  const lastIdRef = useRef<string>('')
+  const cacheRef = useRef(
+    new Map<
+      string,
+      {
+        turns: MessageTurn[]
+        question: string
+        state: StreamState
+        usesLiveState: boolean
+      }
+    >(),
+  )
+  const streamSessionIdRef = useRef('')
+  const turnsRef = useRef(turns)
   const questionRef = useRef(question)
-  const historyStateRef = useRef(historyState)
+  const currentState =
+    historyState ??
+    (streamSessionIdRef.current === id ? state : initialStreamState)
+  const currentStateRef = useRef(currentState)
 
   const send = useCallback(
-    async (message: string, attachments: string[]) => {
+    async (
+      message: string,
+      attachments: string[],
+      archiveCurrent = true,
+    ) => {
+      const previousQuestion = questionRef.current.trim()
+      const previousState = currentStateRef.current
+      if (
+        archiveCurrent &&
+        previousQuestion &&
+        previousState.status !== 'idle' &&
+        previousState.status !== 'submitting'
+      ) {
+        setTurns((currentTurns) => [
+          ...currentTurns,
+          { question: previousQuestion, state: previousState },
+        ])
+      }
+
+      streamSessionIdRef.current = id
       setQuestion(message)
+      setHistoryState(null)
       await sendStream({
         id,
         message,
@@ -39,49 +77,70 @@ export default function Chat() {
   )
 
   useEffect(() => {
+    turnsRef.current = turns
+  }, [turns])
+
+  useEffect(() => {
     questionRef.current = question
   }, [question])
 
   useEffect(() => {
-    historyStateRef.current = historyState
-  }, [historyState])
+    currentStateRef.current = currentState
+  }, [currentState])
 
   useEffect(() => {
-    // Persist the previous session's view state so switching chats doesn't blank it out.
-    const prevId = lastIdRef.current
-    if (prevId && prevId !== id) {
-      cacheRef.current.set(prevId, {
+    let cancelled = false
+    const persistView = () => {
+      cancelled = true
+      cacheRef.current.set(id, {
+        turns: turnsRef.current,
         question: questionRef.current,
-        historyState: historyStateRef.current,
+        state: currentStateRef.current,
+        usesLiveState: streamSessionIdRef.current === id,
       })
     }
-    lastIdRef.current = id
 
     const message = transport.data?.data.message
     if (message) {
+      setTurns([])
       setHistoryState(null)
-      void send(message, [])
-      return
+      void send(message, [], false)
+      return persistView
     }
 
     const cached = cacheRef.current.get(id)
     if (cached) {
+      setTurns(cached.turns)
       setQuestion(cached.question)
-      setHistoryState(cached.historyState)
-      return
+      setHistoryState(
+        cached.usesLiveState && streamSessionIdRef.current === id
+          ? null
+          : cached.state,
+      )
+      return persistView
     }
 
     void api.session.detail({ session_id: id }).then(({ data }) => {
-      const last = data.at(-1)
+      if (cancelled) return
+
+      const historyTurns = data.map((item) => ({
+        question: item.user_question,
+        state: historyToStreamState(item),
+      }))
+      const last = historyTurns[historyTurns.length - 1]
+
+      setTurns(historyTurns.slice(0, -1))
       if (last) {
-        setQuestion(last.user_question)
-        setHistoryState(historyToStreamState(last))
+        setQuestion(last.question)
+        setHistoryState(last.state)
         return
       }
 
       setQuestion('')
       setHistoryState(null)
     })
+
+    return persistView
   }, [id, send, transport.data])
 
   useEffect(() => () => stop(), [stop])
@@ -89,21 +148,24 @@ export default function Chat() {
   return (
     <section className={styles.chat}>
       <MessageList
+        turns={turns}
         question={question}
-        state={historyState ?? state}
+        state={currentState}
         onRetry={() => {
           if (question) {
-            void send(question, [])
+            void send(question, [], false)
           }
         }}
         onAsk={(nextQuestion) => {
-          setHistoryState(null)
           void send(nextQuestion, [])
         }}
       />
       <div className={styles.composer}>
         <PromptComposer
-          loading={['submitting', 'researching', 'streaming'].includes(state.status)}
+          loading={
+            streamSessionIdRef.current === id &&
+            ['submitting', 'researching', 'streaming'].includes(state.status)
+          }
           onSend={send}
           onStop={stop}
         />

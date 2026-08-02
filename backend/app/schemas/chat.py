@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import List
 
 ##################################
@@ -52,3 +52,5 @@ class AddDocsResponse(BaseModel):
 
 class ChatRequest(BaseModel):
     message: str
+    web_search: bool = True
+    attachments: List[str] = Field(default_factory=list)

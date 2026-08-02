@@ -17,6 +17,7 @@ export function historyToStreamState(item: {
     status: 'completed',
     content: item.model_answer,
     milestones: [],
+    activities: [],
     sources,
     images: [],
     recommendations: item.recommended_questions ?? [],

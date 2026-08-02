@@ -57,15 +57,34 @@
 }
 
 .mode {
+  border: 0;
   padding: 6px 10px;
   border-radius: 999px;
+  background: transparent;
   color: #5e5e5a;
+  cursor: pointer;
+  font-family: inherit;
   font-size: 13px;
+  line-height: 1.4;
+  transition:
+    background var(--ds-motion-fast) ease,
+    color var(--ds-motion-fast) ease;
+}
+
+.mode:hover {
+  background: var(--ds-bg-subtle);
+  color: var(--ds-text);
+}
+
+.mode:focus-visible {
+  outline: 2px solid var(--ds-action);
+  outline-offset: 2px;
 }
 
 .modeActive {
   background: var(--ds-bg-hover);
   color: var(--ds-text);
+  font-weight: 600;
 }
 
 .spacer {

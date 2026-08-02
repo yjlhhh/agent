@@ -82,3 +82,39 @@ def get_user_history_questions(session_id: str):
         raise RuntimeError(f"Failed to fetch history questions: {str(e)}")
     finally:
         db.close()
+
+
+def get_session_history(session_id: str, limit: int = 10):
+    """Return the most recent complete turns in chronological order."""
+    db = next(get_db())
+    try:
+        messages_data = db.execute(
+            text(
+                """
+                SELECT user_question, model_answer
+                FROM (
+                    SELECT user_question, model_answer, created_at
+                    FROM messages
+                    WHERE session_id = :session_id
+                    ORDER BY created_at DESC
+                    LIMIT :limit
+                ) AS recent_messages
+                ORDER BY created_at ASC
+                """
+            ),
+            {"session_id": session_id, "limit": limit},
+        ).fetchall()
+
+        return [
+            {
+                "user": (message.user_question or "")[:2000],
+                "assistant": (message.model_answer or "")[:6000],
+            }
+            for message in messages_data
+        ]
+    except SQLAlchemyError as error:
+        raise RuntimeError(
+            f"Failed to fetch session history: {str(error)}"
+        ) from error
+    finally:
+        db.close()

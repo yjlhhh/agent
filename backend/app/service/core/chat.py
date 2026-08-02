@@ -171,8 +171,15 @@ def update_session_name(session_id: str, question: str, user_id: str):
         ).fetchone()
 
         if query_result:
-            # 如果查到了，直接跳过
-            logger.info(f"Session {session_id} already exists, skipping.")
+            db.execute(
+                text(
+                    "UPDATE sessions SET updated_at = CURRENT_TIMESTAMP "
+                    "WHERE session_id = :session_id"
+                ),
+                {"session_id": session_id},
+            )
+            db.commit()
+            logger.info(f"Session {session_id} timestamp updated.")
         else:
             if question:
                 session_name = generate_session_name(question)
@@ -203,7 +210,16 @@ def update_session_name(session_id: str, question: str, user_id: str):
     finally:
         db.close()
 
-def get_chat_completion(session_id, question, retrieved_content, user_id, final_prompt, related_questions, snippets):
+def get_chat_completion(
+    session_id,
+    question,
+    retrieved_content,
+    user_id,
+    final_prompt,
+    related_questions,
+    snippets,
+    enable_web_search=True,
+):
     """
     获取流式聊天完成结果，并按照指定格式输出。
 
@@ -252,19 +268,20 @@ def get_chat_completion(session_id, question, retrieved_content, user_id, final_
                 json_message = json.dumps(message)
                 yield f"event: message\ndata: {json_message}\n\n"
 
-                # 返回图片视频搜索结果
-                image_results = serper_images(q=question, hl="zh-cn")
-                video_results = serper_videos(q=question, hl="zh-cn")
-                message = {
-                    "image_results": image_results,
-                }
-                json_message = json.dumps(message)
-                yield f"event: message\ndata: {json_message}\n\n"
-                message = {
-                    "video_results": video_results,
-                }
-                json_message = json.dumps(message)
-                yield f"event: message\ndata: {json_message}\n\n"
+                # 只有启用联网时才查询图片和视频，避免绕过用户选择。
+                if enable_web_search:
+                    image_results = serper_images(q=question, hl="zh-cn")
+                    video_results = serper_videos(q=question, hl="zh-cn")
+                    message = {
+                        "image_results": image_results,
+                    }
+                    json_message = json.dumps(message)
+                    yield f"event: message\ndata: {json_message}\n\n"
+                    message = {
+                        "video_results": video_results,
+                    }
+                    json_message = json.dumps(message)
+                    yield f"event: message\ndata: {json_message}\n\n"
 
                 # 结束时发送 [DONE] 事件
                 yield "event: end\ndata: [DONE]\n\n"

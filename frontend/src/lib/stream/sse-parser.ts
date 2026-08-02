@@ -1,4 +1,38 @@
-import type { StreamEvent } from './types'
+import type { ResearchActivityItem, StreamEvent } from './types'
+
+function mapAgentMessage(content: string): ResearchActivityItem {
+  const query = content.match(/[“"']([^”"']+)[”"']/)?.[1]?.trim()
+
+  if (content.includes('本地文档搜索')) {
+    return {
+      kind: 'search',
+      title: '搜索本地知识库',
+      detail: query || '查找与问题相关的文档内容',
+    }
+  }
+
+  if (content.includes('网络搜索')) {
+    return {
+      kind: 'search',
+      title: '搜索网络信息',
+      detail: query || '查找最新的公开信息',
+    }
+  }
+
+  if (content.includes('补充检索')) {
+    return {
+      kind: 'verification',
+      title: '补充验证',
+      detail: '补充缺失信息并检查现有结论',
+    }
+  }
+
+  return {
+    kind: 'analysis',
+    title: '执行研究步骤',
+    detail: content.slice(0, 120),
+  }
+}
 
 export function createSseParser(onEvent: (event: StreamEvent) => void) {
   let buffer = ''
@@ -20,7 +54,9 @@ export function createSseParser(onEvent: (event: StreamEvent) => void) {
     try {
       const value = JSON.parse(data)
 
-      if (value.content) {
+      if (value.role === 'agent' && value.content) {
+        onEvent({ type: 'activity', activity: mapAgentMessage(value.content) })
+      } else if (value.content) {
         onEvent({ type: value.thinking ? 'thinking' : 'content', content: value.content })
       }
 

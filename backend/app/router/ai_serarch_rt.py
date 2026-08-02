@@ -7,7 +7,10 @@ from dotenv import load_dotenv
 from typing import List
 from service.core.file_parse import execute_insert_process
 from service.core.api.utils.file_utils import get_project_base_directory
-from database.knowledgebase_operations import get_user_history_questions
+from database.knowledgebase_operations import (
+    get_session_history,
+    get_user_history_questions,
+)
 from service.core.retrieval import retrieve_content
 from service.core.chat import get_chat_completion
 from service.core.rag.nlp.model import rerank_results
@@ -146,9 +149,13 @@ async def ai_search(
         print(history_questions)
 
 
-        # 处理web搜索结果
-        top_snippets, related_questions = store_and_query_snippets(question)
-        web_results = [item["content"] for item in top_snippets]
+        # 仅在用户启用联网时执行网络搜索。
+        top_snippets = []
+        related_questions = []
+        web_results = []
+        if request.web_search:
+            top_snippets, related_questions = store_and_query_snippets(question)
+            web_results = [item["content"] for item in top_snippets]
 
         final_reference = knowledgebase_results + web_results
 
@@ -166,7 +173,16 @@ async def ai_search(
 
         # 返回流式响应
         return StreamingResponse(
-            get_chat_completion(session_id, question, knowledgebase_results, user_id, final_prompt, related_questions,top_snippets),
+            get_chat_completion(
+                session_id,
+                question,
+                knowledgebase_results,
+                user_id,
+                final_prompt,
+                related_questions,
+                top_snippets,
+                enable_web_search=request.web_search,
+            ),
             media_type="text/event-stream"
         )
 
@@ -190,11 +206,18 @@ async def deep_research(
 ):
     try:
         question = request.message
+        conversation_history = get_session_history(session_id)
         print("处理问题：")
         print(question)
         # 返回流式响应
         return StreamingResponse(
-            final_answer(question),
+            final_answer(
+                question,
+                allow_web=request.web_search,
+                session_id=session_id,
+                user_id="1",
+                conversation_history=conversation_history,
+            ),
             media_type="text/event-stream"
         )
 
