@@ -1,0 +1,8 @@
+.pricing-page { width: min(880px, calc(100% - 64px)); margin: 0 auto; padding: 64px 0; }
+.pricing-page > header { text-align: center; margin-bottom: 34px; }
+.pricing-page h1 { margin: 0; font-size: 32px; letter-spacing: -0.04em; }
+.pricing-page header p { color: var(--ds-text-secondary); }
+.pricing-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+.pricing-card { padding: 28px; border: 1px solid var(--ds-border); border-radius: var(--ds-radius-content); }
+.pricing-card > strong { display: block; margin: 14px 0; font-size: 24px; }
+.pricing-card ul { min-height: 120px; padding: 0; list-style: none; color: var(--ds-text-secondary); }
