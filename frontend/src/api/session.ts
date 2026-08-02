@@ -57,43 +57,24 @@ export function chat(
   },
   options?: AxiosRequestConfig,
 ) {
-  const { id, deep_research, ..._params } = params
-  if (deep_research) {
-    return request.post<ReadableStream>(
-      '/deep_research/',
-      {
-        ..._params,
-      },
-      {
-        headers: {
-          Accept: 'text/event-stream',
-        },
-        responseType: 'stream',
-        adapter: 'fetch',
-        loading: false,
-        params: {
-          session_id: id,
-        },
-      },
-    )
+  const { id, deep_research, ...body } = params
+  const config: AxiosRequestConfig = {
+    headers: {
+      Accept: 'text/event-stream',
+    },
+    responseType: 'stream',
+    adapter: 'fetch',
+    loading: false,
+    params: {
+      session_id: id,
+    },
+    ...options,
   }
+
   return request.post<ReadableStream>(
-    '/ai_search/',
-    {
-      ..._params,
-    },
-    {
-      headers: {
-        Accept: 'text/event-stream',
-      },
-      responseType: 'stream',
-      adapter: 'fetch',
-      loading: false,
-      params: {
-        session_id: id,
-      },
-      ...options,
-    },
+    deep_research ? '/deep_research/' : '/ai_search/',
+    body,
+    config,
   )
 }
 
