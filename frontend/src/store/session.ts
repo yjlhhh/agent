@@ -1,3 +1,4 @@
+import { list } from '@/api/session'
 import { proxy } from 'valtio'
 
 const state = proxy({
@@ -9,6 +10,10 @@ const state = proxy({
 const actions = {
   setList(list: API.Session[]) {
     state.list = list
+  },
+  async refresh() {
+    const result = await list()
+    state.list = result.data.sessions
   },
   add(item: API.Session) {
     state.list.push(item)
