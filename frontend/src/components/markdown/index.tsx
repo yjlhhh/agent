@@ -20,7 +20,7 @@ export default function Markdown(props: {
     const html = marked.parse(value ?? '', {
       gfm: false,
       renderer,
-    })
+    }) as string
 
     return html
   }, [value, extensions])
