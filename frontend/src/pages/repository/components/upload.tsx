@@ -55,8 +55,9 @@ export default forwardRef(function RepositoryUpload(
                 return item
               }),
             )
-          } catch (error: any) {
-            window.$app.message.error(error?.message || '上传失败')
+          } catch (error: unknown) {
+            const message = getErrorMessage(error)
+            window.$app.message.error(message)
             hasError = true
             setFileList((prev) =>
               prev.map((item) => {
@@ -64,7 +65,7 @@ export default forwardRef(function RepositoryUpload(
                   return {
                     ...item,
                     status: 'error',
-                    response: error?.message,
+                    response: message,
                   }
                 }
                 return item
@@ -115,3 +116,10 @@ export default forwardRef(function RepositoryUpload(
     </div>
   )
 })
+
+function getErrorMessage(error: unknown) {
+  if (error instanceof Error && error.message) {
+    return error.message
+  }
+  return '上传失败'
+}

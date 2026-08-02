@@ -33,7 +33,7 @@ const Section = (props: {
   )
 }
 
-const 答案 = (props: { item: API.ChatItem }) => {
+const AnswerSection = (props: { item: API.ChatItem }) => {
   const { item } = props
 
   /* markdown */
@@ -94,7 +94,7 @@ const 答案 = (props: { item: API.ChatItem }) => {
   )
 }
 
-const 来源 = (props: { item: API.ChatItem }) => {
+const SourceSection = (props: { item: API.ChatItem }) => {
   const { item } = props
 
   // 来源与之前后端协商的不一致，暂时不展示了
@@ -122,38 +122,7 @@ const 来源 = (props: { item: API.ChatItem }) => {
   )
 }
 
-const 笔记 = (props: { item: API.ChatItem }) => {
-  const { item } = props
-  console.log(item)
-
-  // 后端暂未实现，使用假数据代替
-  return (
-    <Section title="笔记" icon={IconImage}>
-      <div className={styles['chat-message-result__xhs']}>
-        {Array.from({ length: 4 }).map((_) => (
-          <div className={styles.item}>
-            <div className={styles.header}>
-              <img className={styles.cover} src={IconShare} />
-            </div>
-
-            <div className={styles.footer}>
-              <div className={styles.title}>
-                如何培养孩子的兴趣？家长学会这三点，孩子受益匪浅 - Classover
-              </div>
-
-              <div className={styles.user}>
-                <img className={styles.avatar} src={IconShare} />
-                <div className={styles.name}>Classover</div>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-    </Section>
-  )
-}
-
-const 图像 = (props: { item: API.ChatItem }) => {
+const ImageSection = (props: { item: API.ChatItem }) => {
   const { item } = props
 
   return (
@@ -175,7 +144,7 @@ const 图像 = (props: { item: API.ChatItem }) => {
   )
 }
 
-const 视频 = (props: { item: API.ChatItem }) => {
+const VideoSection = (props: { item: API.ChatItem }) => {
   const { item } = props
 
   return (
@@ -199,7 +168,7 @@ const 视频 = (props: { item: API.ChatItem }) => {
   )
 }
 
-const 相关 = (props: {
+const RelatedSection = (props: {
   item: API.ChatItem
   onSend?: (text: string) => void
 }) => {
@@ -260,7 +229,9 @@ export function Result(props: {
 
   return (
     <div className={styles['chat-message-result']}>
-      {item.think || item.content || item.error ? <答案 item={item} /> : null}
+      {item.think || item.content || item.error ? (
+        <AnswerSection item={item} />
+      ) : null}
 
       {item.loading ? null : (
         <div className={styles['chat-message-result__actions']}>
@@ -288,16 +259,14 @@ export function Result(props: {
         </div>
       )}
 
-      {item.reference?.length ? <来源 item={item} /> : null}
+      {item.reference?.length ? <SourceSection item={item} /> : null}
 
-      {false ? <笔记 item={item} /> : null}
+      {item.image_results?.images?.length ? <ImageSection item={item} /> : null}
 
-      {item.image_results?.images?.length ? <图像 item={item} /> : null}
-
-      {item.video_results?.videos?.length ? <视频 item={item} /> : null}
+      {item.video_results?.videos?.length ? <VideoSection item={item} /> : null}
 
       {!item.loading && isEnd && item.recommended_questions?.length ? (
-        <相关 item={item} onSend={onSend} />
+        <RelatedSection item={item} onSend={onSend} />
       ) : null}
     </div>
   )

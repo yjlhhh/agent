@@ -133,7 +133,7 @@ export default function Index() {
           message,
           web_search: sessionStore.useWeb,
           deep_research: sessionStore.useDeep,
-          attachments: attachments,
+          attachments,
         })
 
         // 获取流式响应的reader
@@ -226,7 +226,7 @@ export default function Index() {
         }
       }
     },
-    [chat],
+    [id, sessionStore.useDeep, sessionStore.useWeb],
   )
 
   // 发送消息的主函数，处理用户输入并创建对话项

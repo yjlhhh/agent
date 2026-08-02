@@ -6,7 +6,7 @@ import { Button, Modal, Space, Table } from 'antd'
 import { ColumnsType } from 'antd/es/table'
 import { TableRowSelection } from 'antd/es/table/interface'
 import dayjs from 'dayjs'
-import { useMemo, useRef, useState } from 'react'
+import { useCallback, useMemo, useRef, useState } from 'react'
 import { FileIcon } from './components/file-icon'
 import { Status } from './components/status'
 import RepositoryUpload, { RepositoryUploadRef } from './components/upload'
@@ -36,7 +36,7 @@ export default function Index() {
     )
   })
 
-  const deleteFile = async (file: IRepository) => {
+  const deleteFile = useCallback(async (file: IRepository) => {
     const {
       data: { message = '删除成功' },
     } =
@@ -46,7 +46,7 @@ export default function Index() {
     // 提示成功
     window.$app.message.success(message)
     refresh()
-  }
+  }, [refresh])
 
   const columns = useMemo<ColumnsType<IRepository>>(
     () => [
@@ -108,7 +108,7 @@ export default function Index() {
         },
       },
     ],
-    [],
+    [deleteFile],
   )
   const scroll = useMemo(() => {
     return {

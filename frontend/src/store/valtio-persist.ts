@@ -22,6 +22,7 @@ type BulkWrite = () => Promise<ReturnType<Write>[]>
 type OnBeforeBulkWrite = (bulkWrite: BulkWrite) => void
 type OnBeforeWrite = (write: Write, path: string) => void
 type Version = number
+type PersistRecord = Record<string, unknown>
 interface IProxyWithPersistInputs<S extends object> {
   name: string
   version: Version
@@ -87,7 +88,7 @@ export default function proxyWithPersist<S extends object>(
     const storage = await inputs.getStorage()
 
     // key is path, value is un-stringified value. stringify happens at time of write
-    const pendingWrites: Record<string, any> = {}
+    const pendingWrites: Record<string, unknown> = {}
 
     const bulkWrite = () =>
       Promise.all(
@@ -160,12 +161,12 @@ export default function proxyWithPersist<S extends object>(
             }
           }
 
-          const persistPath = (value: any) => {
+          const persistPath = (value: unknown) => {
             const target =
               value && typeof value === 'object' ? snapshot(value) : value
             pendingWrites[filePath] = target
             if (isPersistingMainObject) {
-              pendingWrites[filePath] = omit(target, '_persist')
+              pendingWrites[filePath] = omit(target as object, '_persist')
             }
             onBeforeBulkWrite(bulkWrite)
           }
@@ -223,14 +224,14 @@ export default function proxyWithPersist<S extends object>(
               }),
           )
 
-          let prevValue = isPersistingMainObject
-            ? omit(snapshot(proxyObject) as object, '_persist')
-            : snapshot(proxySubObject[pathKey])
+          let prevValue: PersistRecord = isPersistingMainObject
+            ? (omit(snapshot(proxyObject) as object, '_persist') as PersistRecord)
+            : (snapshot(proxySubObject[pathKey]) as PersistRecord)
 
-          const persistLeaf = (valueProxy: any) => {
-            let value = snapshot(valueProxy)
+          const persistLeaf = (valueProxy: object) => {
+            let value = snapshot(valueProxy) as PersistRecord
             if (isPersistingMainObject) {
-              value = omit(value, '_persist')
+              value = omit(value, '_persist') as PersistRecord
             }
             // figured out which subkeys were added, removed, changed
             const keys = new Set(Object.keys(value))
@@ -264,8 +265,8 @@ export default function proxyWithPersist<S extends object>(
             })
 
             prevValue = isPersistingMainObject
-              ? omit(snapshot(proxyObject) as object, '_persist')
-              : snapshot(proxySubObject[pathKey])
+              ? (omit(snapshot(proxyObject) as object, '_persist') as PersistRecord)
+              : (snapshot(proxySubObject[pathKey]) as PersistRecord)
 
             if (addedKeys.length || removedKeys.length || updatedKeys.length) {
               removedKeys.forEach((key) => {

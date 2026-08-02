@@ -1,4 +1,4 @@
-import { AxiosRequestConfig, AxiosResponse, CanceledError } from 'axios'
+import { AxiosError, AxiosRequestConfig, AxiosResponse, CanceledError } from 'axios'
 import { ResponseError } from '../error'
 import { IRequestPlugin } from './plugin'
 
@@ -23,7 +23,10 @@ export const errorToastPlugin: IRequestPlugin = {
     instance.interceptors.response.use(
       (response) => response,
       (error) => {
-        const response = error.response as AxiosResponse<any> | undefined
+        const axiosError = error as AxiosError<ErrorResponseData>
+        const response = axiosError.response as
+          | AxiosResponse<ErrorResponseData>
+          | undefined
         const config = (response?.config ?? error?.config) as AxiosRequestConfig
 
         if (config && !config.errorToast) return Promise.reject(error)
@@ -49,4 +52,10 @@ export const errorToastPlugin: IRequestPlugin = {
       },
     )
   },
+}
+
+type ErrorResponseData = {
+  message?: string
+  detail?: string
+  error?: string
 }

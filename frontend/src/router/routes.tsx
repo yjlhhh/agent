@@ -16,7 +16,7 @@ export type IRouteObject = {
   name?: string
   auth?: boolean
   pure?: boolean
-  meta?: any
+  meta?: unknown
 } & Omit<RouteObject, 'children'>
 
 export const routes: IRouteObject[] = [
@@ -38,6 +38,7 @@ export const routes: IRouteObject[] = [
   },
 ]
 
+// eslint-disable-next-line react-refresh/only-export-components
 function Layout() {
   const location = useLocation()
   return (
@@ -75,7 +76,9 @@ function helper(route: IRouteObject) {
   }
 
   if (_route.children) {
-    _route.children = _route.children.map((child: any) => helper(child))
+    _route.children = _route.children.map((child: IRouteObject) =>
+      helper(child),
+    )
   }
 
   if (_route.auth === undefined) {

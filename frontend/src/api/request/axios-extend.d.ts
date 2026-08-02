@@ -29,7 +29,7 @@ declare module 'axios' {
     unwrap?: boolean
   }
 
-  export interface AxiosResponse<T, D> {
+  export interface AxiosResponse<T = unknown, D = unknown> {
     /**
      * 展开接口数据前的原始数据
      * plugins/service.ts
@@ -39,5 +39,10 @@ declare module 'axios' {
       msg: string
       data: T
     }
+
+    /**
+     * 保留原始请求体的类型参数，避免模块扩展丢失 axios 的第二泛型位。
+     */
+    _requestData?: D
   }
 }

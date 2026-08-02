@@ -1,7 +1,5 @@
 import IconNewChat from '@/assets/layout/newchat.svg'
 import StoreImage from '@/assets/layout/store.svg'
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import IconVip from '@/assets/layout/vip.svg'
 import { Avatar } from 'antd'
 import { useMemo } from 'react'

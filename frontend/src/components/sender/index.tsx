@@ -8,6 +8,7 @@ import {
   ReadOutlined,
 } from '@ant-design/icons'
 import { Button, Input, Space, Upload, UploadFile } from 'antd'
+import type { RcFile } from 'antd/es/upload'
 import classNames from 'classnames'
 import { PropsWithChildren, useMemo, useState } from 'react'
 import { useSnapshot } from 'valtio'
@@ -40,10 +41,9 @@ export default function ComSender(
     className?: string
     loading?: boolean
     onSend?: (value: string, files: string[]) => void | Promise<void>
-    onContract?: () => void
   }>,
 ) {
-  const { className, onSend, onContract, loading, ...rest } = props
+  const { className, onSend, loading, ...rest } = props
   const [value, setValue] = useState('')
   const [fileList, setFileList] = useState<
     (UploadFile & {
@@ -81,6 +81,7 @@ export default function ComSender(
 
   async function upload(
     file: UploadFile & {
+      originFileObj?: RcFile
       loading?: boolean
     },
   ) {
@@ -90,19 +91,20 @@ export default function ComSender(
     }
 
     file.loading = true
+    const sourceFile = file.originFileObj ?? (file as RcFile)
 
     if (file.type?.startsWith('image/')) {
-      file.preview = URL.createObjectURL(file as any)
+      file.preview = URL.createObjectURL(sourceFile)
     }
 
     setFileList((prev) => [...prev, file])
 
     try {
-      const { data } = await api.session.upload({ files: file as any })
+      const { data } = await api.session.upload({ files: sourceFile })
       file.url = data.url
 
       window.$app.message.success(`${file.name} 上传成功`)
-    } catch (error) {
+    } catch {
       window.$app.message.error(`${file.name} 上传失败`)
     } finally {
       file.loading = false

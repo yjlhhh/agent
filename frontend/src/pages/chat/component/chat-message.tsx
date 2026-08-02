@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-expressions */
 import { ChatRole, ChatType } from '@/configs'
 import { SyncOutlined } from '@ant-design/icons'
 import classNames from 'classnames'

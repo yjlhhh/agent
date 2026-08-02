@@ -15,9 +15,9 @@ export default function Markdown(props: {
     const renderer = new Renderer()
 
     const marked = new Marked({
-      extensions: props.extensions,
+      extensions,
     })
-    const html = marked.parse(props.value ?? '', {
+    const html = marked.parse(value ?? '', {
       gfm: false,
       renderer,
     })

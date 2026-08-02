@@ -1,4 +1,4 @@
-import { AxiosResponse } from 'axios'
+import { AxiosError, AxiosResponse } from 'axios'
 import { ResponseError } from '../error'
 import { IRequestPlugin } from './plugin'
 
@@ -27,7 +27,10 @@ export const servicePlugin: IRequestPlugin = {
         return response
       },
       (error) => {
-        const response = error.response as AxiosResponse<any> | undefined
+        const axiosError = error as AxiosError<ServiceResponseData>
+        const response = axiosError.response as
+          | AxiosResponse<ServiceResponseData>
+          | undefined
 
         const data = response?.data
         if (!response || !isObject(data)) return Promise.reject(error)
@@ -46,7 +49,13 @@ export const servicePlugin: IRequestPlugin = {
   },
 }
 
-function isObject(value: unknown) {
+function isObject(value: unknown): value is ServiceResponseData {
   const type = typeof value
   return value != null && (type === 'object' || type === 'function')
+}
+
+type ServiceResponseData = {
+  [CODE_KEY]?: string
+  [MESSAGE_KEY]?: string
+  detail?: string
 }

@@ -1,4 +1,4 @@
-import { AxiosRequestConfig, AxiosResponse } from 'axios'
+import { AxiosError, AxiosRequestConfig, AxiosResponse } from 'axios'
 import { IRequestPlugin } from './plugin'
 
 function show() {
@@ -20,7 +20,8 @@ export const loadingPlugin: IRequestPlugin = {
         return response
       },
       (error) => {
-        const response = error.response as AxiosResponse<any> | undefined
+        const axiosError = error as AxiosError<unknown>
+        const response = axiosError.response as AxiosResponse<unknown> | undefined
 
         const config = response?.config ?? error?.config
         const loading = config?.loading
