@@ -6,7 +6,7 @@ import { historyToStreamState } from '@/lib/stream/history'
 import type { StreamState } from '@/lib/stream/types'
 import { sessionState } from '@/store/session'
 import { usePageTransport } from '@/utils/usePageTransport'
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { useSnapshot } from 'valtio'
 import styles from './index.module.scss'
@@ -19,6 +19,10 @@ export default function Chat() {
   const transport = usePageTransport(transportToChatEnter)
   const [question, setQuestion] = useState('')
   const [historyState, setHistoryState] = useState<StreamState | null>(null)
+  const cacheRef = useRef(new Map<string, { question: string; historyState: StreamState | null }>())
+  const lastIdRef = useRef<string>('')
+  const questionRef = useRef(question)
+  const historyStateRef = useRef(historyState)
 
   const send = useCallback(
     async (message: string, attachments: string[]) => {
@@ -35,10 +39,35 @@ export default function Chat() {
   )
 
   useEffect(() => {
+    questionRef.current = question
+  }, [question])
+
+  useEffect(() => {
+    historyStateRef.current = historyState
+  }, [historyState])
+
+  useEffect(() => {
+    // Persist the previous session's view state so switching chats doesn't blank it out.
+    const prevId = lastIdRef.current
+    if (prevId && prevId !== id) {
+      cacheRef.current.set(prevId, {
+        question: questionRef.current,
+        historyState: historyStateRef.current,
+      })
+    }
+    lastIdRef.current = id
+
     const message = transport.data?.data.message
     if (message) {
       setHistoryState(null)
       void send(message, [])
+      return
+    }
+
+    const cached = cacheRef.current.get(id)
+    if (cached) {
+      setQuestion(cached.question)
+      setHistoryState(cached.historyState)
       return
     }
 

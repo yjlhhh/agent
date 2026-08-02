@@ -41,9 +41,10 @@ export const routes: IRouteObject[] = [
 // eslint-disable-next-line react-refresh/only-export-components
 function Layout() {
   const location = useLocation()
+  const outletKey = location.pathname.startsWith('/chat/') ? '/chat' : location.pathname
   return (
     <AppShell>
-      <Outlet key={location.pathname} />
+      <Outlet key={outletKey} />
     </AppShell>
   )
 }
