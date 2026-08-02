@@ -16,7 +16,9 @@
   margin: 0 0 28px auto;
   padding: 10px 14px;
   border-radius: 18px 18px 5px 18px;
-  background: #f3f3f1;
+  background: var(--ds-bg-subtle);
+  border: 1px solid var(--ds-border);
+  white-space: pre-wrap;
 }
 
 .jump {
@@ -28,4 +30,5 @@
   border: 1px solid var(--ds-border);
   border-radius: 50%;
   background: #fff;
+  cursor: pointer;
 }

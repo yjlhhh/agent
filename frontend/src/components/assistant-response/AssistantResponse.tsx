@@ -10,26 +10,68 @@ import styles from './AssistantResponse.module.scss'
 type AssistantResponseProps = {
   state: StreamState
   onRetry?: () => void
+  onAsk?: (question: string) => void
 }
 
-export default function AssistantResponse({ state, onRetry }: AssistantResponseProps) {
+export default function AssistantResponse({ state, onRetry, onAsk }: AssistantResponseProps) {
   const [sourcesOpen, setSourcesOpen] = useState(false)
   const hasSources = state.sources.length > 0
+  const hasFollowups = state.status === 'completed' && state.recommendations.length > 0
 
   return (
     <article className={styles.response}>
       <ResearchActivity status={state.status} milestones={state.milestones} />
       <MediaGallery images={state.images} />
-      <MarkdownContent value={state.content} />
-      {state.error ? <p role="alert">{state.error}</p> : null}
+      {state.content ? (
+        <div className={styles.markdown}>
+          <MarkdownContent value={state.content} />
+        </div>
+      ) : null}
+
+      {state.error ? (
+        <p className={styles.error} role="alert">
+          {state.error}
+        </p>
+      ) : null}
+
+      {hasFollowups ? (
+        <section className={styles.followups} aria-label="推荐追问">
+          <h2 className={styles.followupsTitle}>你还可以问</h2>
+          <div className={styles.followupsGrid}>
+            {state.recommendations.slice(0, 4).map((q) => (
+              <button
+                key={q}
+                type="button"
+                className={styles.followup}
+                onClick={() => onAsk?.(q)}
+              >
+                {q}
+              </button>
+            ))}
+          </div>
+        </section>
+      ) : null}
+
       {hasSources ? (
-        <button type="button" onClick={() => setSourcesOpen(true)}>
+        <button
+          className={styles.sourcesButton}
+          type="button"
+          onClick={() => setSourcesOpen(true)}
+        >
           查看 {state.sources.length} 个来源
         </button>
       ) : null}
-      {state.content ? <ResponseActions content={state.content} onRetry={onRetry} /> : null}
+
+      {state.content ? (
+        <ResponseActions content={state.content} onRetry={onRetry} />
+      ) : null}
+
       {hasSources ? (
-        <SourceDrawer open={sourcesOpen} onClose={() => setSourcesOpen(false)} sources={state.sources} />
+        <SourceDrawer
+          open={sourcesOpen}
+          onClose={() => setSourcesOpen(false)}
+          sources={state.sources}
+        />
       ) : null}
     </article>
   )

@@ -1,5 +1,6 @@
 import { Drawer } from 'antd'
 import type { SourceItem } from '@/lib/stream/types'
+import styles from './SourceDrawer.module.scss'
 
 type SourceDrawerProps = {
   open: boolean
@@ -11,15 +12,18 @@ export default function SourceDrawer({ open, onClose, sources }: SourceDrawerPro
   if (sources.length === 0) return null
 
   return (
-    <Drawer title="来源" open={open} onClose={onClose}>
-      {sources.map((source) => (
-        <article key={source.url}>
-          <a href={source.url} target="_blank" rel="noopener noreferrer">
-            {source.title}
-          </a>
-          <p>{source.content}</p>
-        </article>
-      ))}
+    <Drawer className={styles.drawer} title="来源" open={open} onClose={onClose}>
+      <div className={styles.list}>
+        {sources.map((source) => (
+          <article className={styles.item} key={source.url}>
+            <a className={styles.title} href={source.url} target="_blank" rel="noopener noreferrer">
+              {source.title}
+            </a>
+            <span className={styles.url}>{source.url}</span>
+            <p className={styles.snippet}>{source.content}</p>
+          </article>
+        ))}
+      </div>
     </Drawer>
   )
 }

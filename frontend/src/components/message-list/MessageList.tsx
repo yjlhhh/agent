@@ -7,6 +7,7 @@ type MessageListProps = {
   question: string
   state: StreamState
   onRetry?: () => void
+  onAsk?: (question: string) => void
 }
 
 export default function MessageList(props: MessageListProps) {
@@ -42,8 +43,14 @@ export default function MessageList(props: MessageListProps) {
       }}
     >
       <div className={styles.content}>
-        <div className={styles.question}>{props.question}</div>
-        <AssistantResponse state={props.state} onRetry={props.onRetry} />
+        {props.question.trim() ? (
+          <div className={styles.question}>{props.question}</div>
+        ) : null}
+        <AssistantResponse
+          state={props.state}
+          onRetry={props.onRetry}
+          onAsk={props.onAsk}
+        />
       </div>
       {away ? (
         <button

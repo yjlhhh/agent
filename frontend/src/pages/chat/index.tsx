@@ -67,6 +67,10 @@ export default function Chat() {
             void send(question, [])
           }
         }}
+        onAsk={(nextQuestion) => {
+          setHistoryState(null)
+          void send(nextQuestion, [])
+        }}
       />
       <div className={styles.composer}>
         <PromptComposer

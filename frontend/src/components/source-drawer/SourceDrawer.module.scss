@@ -1,0 +1,48 @@
+.drawer :global(.ant-drawer-header) {
+  border-bottom: 1px solid var(--ds-border);
+}
+
+.drawer :global(.ant-drawer-body) {
+  padding: 16px 16px 18px;
+}
+
+.list {
+  display: grid;
+  gap: 14px;
+}
+
+.item {
+  border: 1px solid var(--ds-border);
+  border-radius: 14px;
+  padding: 12px 12px 10px;
+  background: #fff;
+}
+
+.title {
+  display: block;
+  color: var(--ds-text);
+  text-decoration: none;
+  font-weight: 600;
+  margin-bottom: 6px;
+  line-height: 1.35;
+}
+
+.title:hover {
+  text-decoration: underline;
+}
+
+.url {
+  display: block;
+  color: var(--ds-text-secondary);
+  font-size: 12px;
+  margin-bottom: 8px;
+  word-break: break-all;
+}
+
+.snippet {
+  margin: 0;
+  color: var(--ds-text-secondary);
+  font-size: 13px;
+  line-height: 1.55;
+}
+

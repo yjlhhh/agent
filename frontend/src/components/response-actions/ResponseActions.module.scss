@@ -1,0 +1,28 @@
+.actions {
+  margin-top: 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--ds-text-secondary);
+  font-size: 13px;
+}
+
+.button {
+  border: 1px solid transparent;
+  background: transparent;
+  border-radius: 10px;
+  padding: 6px 10px;
+  cursor: pointer;
+  color: var(--ds-text-secondary);
+  transition:
+    background var(--ds-motion-fast) ease,
+    color var(--ds-motion-fast) ease,
+    border-color var(--ds-motion-fast) ease;
+}
+
+.button:hover {
+  background: var(--ds-bg-hover);
+  color: var(--ds-text);
+  border-color: var(--ds-border);
+}
+
