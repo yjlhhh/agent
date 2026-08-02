@@ -1,8 +1,7 @@
 import * as api from '@/api'
 import IconDelete from '@/assets/repository/action/delete.svg'
-import { PlusOutlined } from '@ant-design/icons'
 import { useRequest } from 'ahooks'
-import { Button, Modal, Space, Table } from 'antd'
+import { Button, Empty, Input, Modal, Select, Skeleton, Space, Table } from 'antd'
 import { ColumnsType } from 'antd/es/table'
 import { TableRowSelection } from 'antd/es/table/interface'
 import dayjs from 'dayjs'
@@ -11,13 +10,20 @@ import { FileIcon } from './components/file-icon'
 import { Status } from './components/status'
 import RepositoryUpload, { RepositoryUploadRef } from './components/upload'
 import styles from './index.module.scss'
+import { getRepositoryStatus, RepositoryStatus } from './repository-state'
 
 type IRepository = API.Repository & {
   id: number
   $suffix: FileIcon
   method: string
   enable: boolean
-  status: string
+  status: RepositoryStatus
+}
+
+function getStatusTag(status: RepositoryStatus): 'failed' | 'success' | 'unparsed' {
+  if (status === 'ready') return 'success'
+  if (status === 'failed') return 'failed'
+  return 'unparsed'
 }
 
 export default function Index() {
@@ -31,7 +37,7 @@ export default function Index() {
           id: index + 1,
           method: '优化分块',
           enable: true,
-          status: 'success',
+          status: getRepositoryStatus(item as API.Repository & { status?: string }),
         }) satisfies IRepository,
     )
   })
@@ -56,8 +62,8 @@ export default function Index() {
         width: 200,
         render(value, row) {
           return (
-            <div className={styles['repository-page__file-name']} title={value}>
-              <FileIcon className={styles['icon']} suffix={row.$suffix} />
+            <div className={styles.fileName} title={value}>
+              <FileIcon className={styles.icon} suffix={row.$suffix} />
               {value}
             </div>
           )
@@ -84,7 +90,7 @@ export default function Index() {
         dataIndex: 'status',
         width: 100,
         render(value) {
-          return <Status status={value} />
+          return <Status status={getStatusTag(value)} />
         },
       },
       {
@@ -132,50 +138,46 @@ export default function Index() {
   const [openUpload, setOpenUpload] = useState(false)
   const uploadRef = useRef<RepositoryUploadRef>(null)
   const [uploading, setUploading] = useState(false)
+  const [keyword, setKeyword] = useState('')
+  const [fileType, setFileType] = useState('all')
+  const filteredData = useMemo(() => (data ?? []).filter((file) => {
+    const matchesKeyword = file.file_name.toLowerCase().includes(keyword.toLowerCase())
+    const matchesType = fileType === 'all' || file.$suffix.toLowerCase() === fileType
+    return matchesKeyword && matchesType
+  }), [data, fileType, keyword])
 
   return (
-    <div className={styles['repository-page']}>
-      <div className={styles['repository-page__header']}>
-        <div className={styles['eyebrow']}>KNOWLEDGE</div>
-        <div className={styles['title']}>知识库</div>
-        <div className={styles['desc']}>
-          添加你的资料，DeepSearch 将在研究与回答中优先使用它们。
+    <section className={styles.page}>
+      <header className={styles.header}>
+        <div>
+          <h1>资料与来源</h1>
+          <p>让 DeepSearch 优先参考你的可信内容</p>
         </div>
+        <Button type="primary" onClick={() => setOpenUpload(true)}>＋ 上传文件</Button>
+      </header>
+      <div className={styles.toolbar}>
+        <Input.Search aria-label="搜索文件" placeholder="搜索文件" onChange={(event) => setKeyword(event.target.value)} />
+        <Select aria-label="文件类型" value={fileType} onChange={setFileType} options={[
+          { value: 'all', label: '全部类型' },
+          { value: 'pdf', label: 'PDF' },
+          { value: 'doc', label: 'DOC' },
+          { value: 'docx', label: 'DOCX' },
+        ]} />
       </div>
-
-      <div className={styles['repository-page__body']}>
-        <div className={styles['header']}>
-          {/* <Input
-            placeholder="搜索你的文件"
-            prefix={<img src={IconSearch} />}
-            style={{ width: 210 }}
-          /> */}
-
-          <Button type="primary" onClick={() => setOpenUpload(true)}>
-            <PlusOutlined />
-            添加文件
-          </Button>
-        </div>
-
-        <Table<IRepository>
-          rowKey="id"
-          columns={columns}
-          dataSource={data}
-          rowSelection={rowSelection}
-          scroll={scroll}
-          pagination={false}
-        />
-      </div>
-
+      {!data ? <Skeleton active /> : filteredData.length === 0 ? (
+        <Empty description="还没有资料，上传文件后即可在回答中引用。" />
+      ) : (
+        <Table rowKey="id" columns={columns} dataSource={filteredData} rowSelection={rowSelection} scroll={scroll} pagination={false} />
+      )}
       <Modal
-        title="添加文件"
+        title="上传文件"
         open={openUpload}
         okText="开始上传"
-        width={400}
+        width={420}
         destroyOnClose
+        confirmLoading={uploading}
         onCancel={() => {
-          if (uploading) return
-          setOpenUpload(false)
+          if (!uploading) setOpenUpload(false)
         }}
         onOk={async () => {
           setUploading(true)
@@ -190,6 +192,6 @@ export default function Index() {
       >
         <RepositoryUpload beforeUpload={() => false} ref={uploadRef} />
       </Modal>
-    </div>
+    </section>
   )
 }

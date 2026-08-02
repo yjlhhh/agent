@@ -92,27 +92,15 @@ export default forwardRef(function RepositoryUpload(
         fileList={fileList}
         onChange={(info) => setFileList(info.fileList)}
       >
-        <img src={IconUpload} />
-        <p
-          className="ant-upload-text"
-          style={{
-            color: '#666',
-          }}
-        >
-          Drag file here or{' '}
-          <span style={{ color: '#171717', fontWeight: 550 }}>click to upload</span>
+        <img src={IconUpload} alt="" />
+        <p className="ant-upload-text">
+          拖放文件到这里，或 <span>点击选择文件</span>
         </p>
       </Upload.Dragger>
-
       <p className={styles['repository-upload__desc']}>
-        Supports single or bulk file upload. Files must not exceed 5M each,with
-        a maximum of 10 files.
+        支持 PDF、DOC 和 DOCX；单个文件不超过 5 MB，最多选择 10 个文件。
       </p>
-
-      <Upload
-        fileList={fileList}
-        onChange={(info) => setFileList(info.fileList)}
-      />
+      <Upload fileList={fileList} onChange={(info) => setFileList(info.fileList)} />
     </div>
   )
 })
