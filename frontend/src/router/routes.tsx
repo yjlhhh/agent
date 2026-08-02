@@ -53,16 +53,18 @@ export const router = createBrowserRouter(
     helper({
       path: '/',
       Component: Layout,
-      children: routes,
-    }),
-    helper({
-      path: '404',
-      Component: NotFound,
-      pure: true,
-    }),
-    helper({
-      path: '*',
-      Component: NotFound,
+      children: [
+        ...routes,
+        {
+          path: '404',
+          Component: NotFound,
+          pure: true,
+        },
+        {
+          path: '*',
+          Component: NotFound,
+        },
+      ],
     }),
   ],
   {

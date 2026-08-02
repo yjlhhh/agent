@@ -1,0 +1,57 @@
+.page {
+  min-height: calc(100vh - 54px);
+  display: grid;
+  place-items: center;
+  text-align: center;
+}
+
+.content {
+  width: min(520px, calc(100% - 32px));
+}
+
+.code {
+  color: var(--ds-text-secondary);
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  margin: 0 0 8px;
+}
+
+.title {
+  margin: 0 0 8px;
+  font-size: 26px;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+}
+
+.desc {
+  color: var(--ds-text-secondary);
+  margin: 0 0 16px;
+}
+
+.actions {
+  display: inline-flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.primary {
+  color: var(--ds-text);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.primary:hover {
+  text-decoration: underline;
+}
+
+.secondary {
+  color: var(--ds-text-secondary);
+  text-decoration: none;
+}
+
+.secondary:hover {
+  color: var(--ds-text);
+  text-decoration: underline;
+}
+
