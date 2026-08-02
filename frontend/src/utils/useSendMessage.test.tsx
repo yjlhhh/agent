@@ -48,7 +48,12 @@ function TriggerSend() {
   const send = useSendMessage()
 
   return (
-    <button type="button" onClick={() => void send('测试消息')}>
+    <button
+      type="button"
+      onClick={() => {
+        void send('测试消息').catch(() => undefined)
+      }}
+    >
       发送
     </button>
   )
@@ -85,4 +90,20 @@ it('creates a real session before navigating to chat', async () => {
     },
   })
   expect(navigate).toHaveBeenCalledWith('/chat/session-123')
+})
+
+it('does not write session state or navigate when session creation fails', async () => {
+  createSession.mockRejectedValueOnce(new Error('create failed'))
+
+  renderWithApp(<TriggerSend />)
+
+  await userEvent.click(screen.getByRole('button', { name: '发送' }))
+
+  await waitFor(() => {
+    expect(createSession).toHaveBeenCalledOnce()
+  })
+
+  expect(addSession).not.toHaveBeenCalled()
+  expect(setPageTransport).not.toHaveBeenCalled()
+  expect(navigate).not.toHaveBeenCalled()
 })

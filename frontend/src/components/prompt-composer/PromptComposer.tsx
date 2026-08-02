@@ -1,4 +1,6 @@
 import { KeyboardEvent, useState } from 'react'
+import { sessionState } from '@/store/session'
+import { useSnapshot } from 'valtio'
 import styles from './PromptComposer.module.scss'
 
 type PromptComposerProps = {
@@ -10,16 +12,32 @@ type PromptComposerProps = {
 export default function PromptComposer(props: PromptComposerProps) {
   const { loading = false, onSend, onStop } = props
   const [value, setValue] = useState('')
+  const [focused, setFocused] = useState(false)
+  const session = useSnapshot(sessionState)
 
   async function submit() {
     const message = value.trim()
     if (!message || loading) return
 
-    await onSend?.(message, [])
-    setValue('')
+    try {
+      await onSend?.(message, [])
+      setValue('')
+    } catch {
+      // Keep the composed value so the user can retry after a failed send.
+    }
   }
 
   function handleKeyDown(event: KeyboardEvent<HTMLTextAreaElement>) {
+    const composing =
+      // React synthetic event: nativeEvent may expose isComposing
+      Boolean((event.nativeEvent as unknown as { isComposing?: boolean })?.isComposing) ||
+      // Test helpers often set isComposing on the synthetic event itself
+      Boolean((event as unknown as { isComposing?: boolean })?.isComposing)
+
+    if (composing) {
+      return
+    }
+
     if (event.key === 'Enter' && !event.shiftKey) {
       event.preventDefault()
       void submit()
@@ -27,7 +45,10 @@ export default function PromptComposer(props: PromptComposerProps) {
   }
 
   return (
-    <div className={styles.composer}>
+    <div
+      className={`${styles.composer} ${focused ? styles.composerFocused : ''}`}
+      data-testid="prompt-composer"
+    >
       <textarea
         aria-label="消息"
         className={styles.input}
@@ -37,6 +58,8 @@ export default function PromptComposer(props: PromptComposerProps) {
         rows={1}
         onChange={(event) => setValue(event.target.value)}
         onKeyDown={handleKeyDown}
+        onFocus={() => setFocused(true)}
+        onBlur={() => setFocused(false)}
       />
 
       <div className={styles.toolbar}>
@@ -44,12 +67,22 @@ export default function PromptComposer(props: PromptComposerProps) {
           type="button"
           className={styles.iconButton}
           aria-label="添加附件"
+          title="附件上传将在聊天中提供"
+          disabled
         >
           +
         </button>
 
-        <span className={`${styles.mode} ${styles.modeActive}`}>深度研究</span>
-        <span className={styles.mode}>联网</span>
+        <span
+          className={`${styles.mode} ${session.useDeep ? styles.modeActive : ''}`}
+        >
+          深度研究
+        </span>
+        <span
+          className={`${styles.mode} ${session.useWeb ? styles.modeActive : ''}`}
+        >
+          联网
+        </span>
 
         <span className={styles.spacer} />
 
